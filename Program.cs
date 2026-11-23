@@ -1,5 +1,12 @@
 ﻿ApplicationConfiguration.Initialize();
 
+// Single instance. After a self-update the new copy waits for the old one to exit.
+var mutex = new Mutex(false, "PilGostergesi_TekKopya");
+bool owned;
+try { owned = mutex.WaitOne(args.Contains("--guncellendi") ? 15000 : 0); }
+catch (AbandonedMutexException) { owned = true; } // previous copy exited without releasing: we own it now
+if (!owned) return;
+
 var settings = Settings.Load();
 var last = new List<Reading>();
 var timer = new System.Windows.Forms.Timer { Interval = settings.IntervalSec * 1000 };
